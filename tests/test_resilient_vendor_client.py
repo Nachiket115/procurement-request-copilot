@@ -25,6 +25,36 @@ class TestResilientVendorClient(unittest.TestCase):
         self.assertEqual(result["risk_level"], "medium")
 
     @patch("requests.get")
+    def test_200_non_json_body_returns_unavailable(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.side_effect = ValueError("Invalid JSON")
+        mock_response.text = "<html><body>502 Bad Gateway</body></html>"
+        mock_get.return_value = mock_response
+
+        result = get_vendor_risk("CorruptVendor")
+        self.assertEqual(result["status"], "unavailable")
+        self.assertEqual(result["vendor_name"], "CorruptVendor")
+        self.assertEqual(result["error"], "Invalid response body")
+
+    @patch("requests.get")
+    def test_url_encoding_and_timeout(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "risk_level": "low",
+        }
+        mock_get.return_value = mock_response
+
+        result = get_vendor_risk("Creative Suite")
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertTrue(called_url.endswith("/vendor-risk/Creative%20Suite"))
+        self.assertEqual(mock_get.call_args[1].get("timeout"), 3.0)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["vendor_name"], "Creative Suite")
+
+    @patch("requests.get")
     def test_404_not_found(self, mock_get):
         mock_response = MagicMock()
         mock_response.status_code = 404

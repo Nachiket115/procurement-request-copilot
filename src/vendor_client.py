@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from urllib.parse import quote
 import requests
@@ -15,11 +16,20 @@ def get_vendor_risk(vendor_name: str, timeout_seconds: float = 3.0) -> dict:
             try:
                 data = response.json()
             except Exception:
-                data = {"raw": response.text}
+                return {
+                    "status": "unavailable",
+                    "vendor_name": vendor_name,
+                    "error": "Invalid response body",
+                }
             if isinstance(data, dict):
                 data.setdefault("status", "ok")
+                data.setdefault("vendor_name", vendor_name)
                 return data
-            return {"status": "ok", "data": data}
+            return {
+                "status": "unavailable",
+                "vendor_name": vendor_name,
+                "error": "Invalid response body",
+            }
 
         detail = None
         try:
@@ -33,13 +43,13 @@ def get_vendor_risk(vendor_name: str, timeout_seconds: float = 3.0) -> dict:
             return {
                 "status": "not_found",
                 "vendor_name": vendor_name,
-                "error": detail or f"No vendor-risk record for '{vendor_name}'",
+                "error": str(detail) if detail is not None else f"No vendor-risk record for '{vendor_name}'",
             }
 
         return {
             "status": "unavailable",
             "vendor_name": vendor_name,
-            "error": detail or f"Vendor-risk service error ({response.status_code})",
+            "error": str(detail) if detail is not None else f"Vendor-risk service error ({response.status_code})",
         }
     except requests.exceptions.Timeout as e:
         return {
@@ -54,8 +64,10 @@ def get_vendor_risk(vendor_name: str, timeout_seconds: float = 3.0) -> dict:
             "error": f"Connection error: {e}",
         }
     except Exception as e:
+        logging.exception("Unexpected error fetching vendor risk for %s: %s", vendor_name, e)
         return {
             "status": "unavailable",
             "vendor_name": vendor_name,
             "error": f"Unexpected error: {e}",
         }
+
