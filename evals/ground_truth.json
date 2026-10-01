@@ -1,0 +1,810 @@
+[
+  {
+    "case_id": "BASE-01",
+    "request_id": "REQ-1001",
+    "product_name": "SignFlow Add-on",
+    "vendor_name": "SignFlow",
+    "annual_cost_usd": 800,
+    "user_count": 3,
+    "recommendation_category": "route_for_standard_review",
+    "required_approvals": [
+      "Manager"
+    ],
+    "approvals_must_not_include": [
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "vendor_risk_unavailable",
+      "privacy_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Low-value spend <= $1,000. Standard review floor. Overlap is an approved seat expansion."
+  },
+  {
+    "case_id": "BASE-02",
+    "request_id": "REQ-1002",
+    "product_name": "BrandBoard Enterprise",
+    "vendor_name": "BrandBoard",
+    "annual_cost_usd": 12000,
+    "user_count": 25,
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "Security",
+      "Legal"
+    ],
+    "approvals_must_not_include": [
+      "CFO",
+      "Privacy"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap",
+      "security_review_required",
+      "legal_review_required"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "vendor_risk_unavailable",
+      "privacy_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "competitor",
+    "notes": "Category overlap with PixelCraft Pro/CreativeSuite. New vendor >= $10k, onboarding pending. Vendor processes personal data surfaced as evidence note only; request data access is internal_marketing, so Privacy is not triggered."
+  },
+  {
+    "case_id": "BASE-03",
+    "request_id": "REQ-1003",
+    "product_name": "CodeMate Teams Expansion",
+    "vendor_name": "CodeMate",
+    "annual_cost_usd": 18000,
+    "user_count": 30,
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "Security"
+    ],
+    "approvals_must_not_include": [
+      "CFO",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap",
+      "security_review_required"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "vendor_risk_unavailable",
+      "privacy_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Matches SW008 in catalog. Source code access triggers Security review under Section 5."
+  },
+  {
+    "case_id": "BASE-04",
+    "request_id": "REQ-1004",
+    "product_name": "NeuralDesk Support Assistant",
+    "vendor_name": "NeuralDesk",
+    "annual_cost_usd": 6000,
+    "user_count": 20,
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Procurement",
+      "Security",
+      "Privacy"
+    ],
+    "approvals_must_not_include": [
+      "Finance",
+      "CFO",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap",
+      "security_review_required",
+      "privacy_review_required"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "vendor_risk_unavailable"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Customer PII and cross-region storage trigger Security and Privacy review under Policy Sec 5, 6, and 8."
+  },
+  {
+    "case_id": "BASE-05",
+    "request_id": "REQ-1005",
+    "product_name": "ProspectPilot",
+    "vendor_name": "GrowthForge",
+    "annual_cost_usd": 22000,
+    "user_count": 35,
+    "recommendation_category": "escalate_to_finance",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "approvals_must_not_include": [
+      "CFO"
+    ],
+    "risk_flags": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "risk_flags_must_not_contain": [
+      "vendor_risk_unavailable"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [],
+    "overlap_type": "none",
+    "notes": "Annual cost $22k exceeds available $18k. New vendor, high risk, customer PII, outside region."
+  },
+  {
+    "case_id": "BASE-06",
+    "request_id": "REQ-1006",
+    "product_name": "NeuralDesk Team Workspace",
+    "vendor_name": "NeuralDesk",
+    "annual_cost_usd": null,
+    "user_count": null,
+    "recommendation_category": "needs_more_information",
+    "required_approvals": [],
+    "approvals_must_not_include": [
+      "Manager",
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap",
+      "missing_information",
+      "prompt_injection_detected"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required"
+    ],
+    "missing_information": [
+      "Missing annual cost estimate",
+      "Missing user/seat license count",
+      "Missing intended data access level"
+    ],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Missing cost/users/data access. Prompt injection embedded in business justification. Unresolved data class pauses review and does not trigger Privacy or Security."
+  },
+  {
+    "case_id": "BASE-07",
+    "request_id": "REQ-1007",
+    "product_name": "SignalWatch Advanced",
+    "vendor_name": "SignalWatch",
+    "annual_cost_usd": 24000,
+    "user_count": 25,
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "Security"
+    ],
+    "approvals_must_not_include": [
+      "CFO",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap",
+      "security_review_required",
+      "vendor_review_expired",
+      "conflicting_vendor_evidence"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "vendor_risk_unavailable",
+      "privacy_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Registry marks Approved but API marks review expired (2025-07-01). Production cloud integration."
+  },
+  {
+    "case_id": "BASE-08",
+    "request_id": "REQ-1008",
+    "product_name": "TaskFlow Pro",
+    "vendor_name": "TaskFlow",
+    "annual_cost_usd": 8000,
+    "user_count": 15,
+    "recommendation_category": "route_for_standard_review",
+    "llm_target_recommendation_category": "use_existing_tool",
+    "required_approvals": [
+      "Department Head",
+      "Procurement"
+    ],
+    "approvals_must_not_include": [
+      "Finance",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "vendor_risk_unavailable",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [],
+    "overlap_type": "duplicate",
+    "notes": "Deterministic floor is route_for_standard_review (no governance roles). LLM may upgrade to use_existing_tool."
+  },
+  {
+    "case_id": "BASE-09",
+    "request_id": "REQ-1009",
+    "product_name": "NimbusAI Contract Reviewer",
+    "vendor_name": "NimbusAI",
+    "annual_cost_usd": 15000,
+    "user_count": 8,
+    "recommendation_category": "escalate_unavailable_evidence",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "Security",
+      "Legal"
+    ],
+    "approvals_must_not_include": [
+      "CFO",
+      "Privacy"
+    ],
+    "risk_flags": [
+      "vendor_risk_unavailable",
+      "security_review_required",
+      "legal_review_required"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "privacy_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [],
+    "overlap_type": "none",
+    "notes": "Mock vendor-risk API returns 503 outage. Confidential documents and unreviewed terms require manual diligence."
+  },
+  {
+    "case_id": "BASE-10",
+    "request_id": "REQ-1010",
+    "product_name": "SignFlow Training Pack",
+    "vendor_name": "SignFlow",
+    "annual_cost_usd": 950,
+    "user_count": 12,
+    "recommendation_category": "route_for_standard_review",
+    "required_approvals": [
+      "Manager"
+    ],
+    "approvals_must_not_include": [
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "vendor_risk_unavailable",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Low-value training services ($950) for approved vendor SignFlow (SW010). Standard review."
+  },
+  {
+    "case_id": "SYN-01",
+    "request_id": "REQ-SYN-01",
+    "product_name": "EngBench Pro",
+    "vendor_name": "DocSpace",
+    "department": "Engineering",
+    "annual_cost_usd": 1000.0,
+    "user_count": 10,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_standard_review",
+    "required_approvals": [
+      "Manager"
+    ],
+    "approvals_must_not_include": [
+      "Department Head",
+      "Procurement",
+      "Finance",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Boundary test: exactly $1,000.00. Engineering dept, non-sensitive data access. Must require Manager only."
+  },
+  {
+    "case_id": "SYN-02",
+    "request_id": "REQ-SYN-02",
+    "product_name": "EngBench Pro Plus",
+    "vendor_name": "DocSpace",
+    "department": "Engineering",
+    "annual_cost_usd": 1000.01,
+    "user_count": 10,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_standard_review",
+    "required_approvals": [
+      "Department Head",
+      "Procurement"
+    ],
+    "approvals_must_not_include": [
+      "Finance",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Boundary test: exactly $1,000.01. Engineering dept, non-sensitive data access. Triggers Dept Head + Procurement. Standard review floor."
+  },
+  {
+    "case_id": "SYN-03",
+    "request_id": "REQ-SYN-03",
+    "product_name": "EngBench Team License",
+    "vendor_name": "DocSpace",
+    "department": "Engineering",
+    "annual_cost_usd": 10000.0,
+    "user_count": 20,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_standard_review",
+    "required_approvals": [
+      "Department Head",
+      "Procurement"
+    ],
+    "approvals_must_not_include": [
+      "Finance",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Boundary test: exactly $10,000.00. Engineering dept, non-sensitive. Explicitly asserts Finance is absent."
+  },
+  {
+    "case_id": "SYN-04",
+    "request_id": "REQ-SYN-04",
+    "product_name": "EngBench Squad License",
+    "vendor_name": "DocSpace",
+    "department": "Engineering",
+    "annual_cost_usd": 10000.01,
+    "user_count": 20,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "Procurement"
+    ],
+    "approvals_must_not_include": [
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Boundary test: exactly $10,000.01. Engineering dept, non-sensitive. Triggers Dept Head + Finance + Procurement (governance review)."
+  },
+  {
+    "case_id": "SYN-05",
+    "request_id": "REQ-SYN-05",
+    "product_name": "EngBench Division License",
+    "vendor_name": "DocSpace",
+    "department": "Engineering",
+    "annual_cost_usd": 25000.0,
+    "user_count": 50,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "Procurement"
+    ],
+    "approvals_must_not_include": [
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Boundary test: exactly $25,000.00. Engineering dept, non-sensitive. Explicitly asserts CFO is absent."
+  },
+  {
+    "case_id": "SYN-06",
+    "request_id": "REQ-SYN-06",
+    "product_name": "EngBench Enterprise Tier",
+    "vendor_name": "DocSpace",
+    "department": "Engineering",
+    "annual_cost_usd": 25000.01,
+    "user_count": 50,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Finance",
+      "CFO",
+      "Procurement"
+    ],
+    "approvals_must_not_include": [
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Boundary test: exactly $25,000.01. Engineering dept ($26k available, so cost <= budget). Triggers Dept Head + Finance + CFO + Procurement."
+  },
+  {
+    "case_id": "SYN-07",
+    "request_id": "REQ-SYN-07",
+    "product_name": "CleanFacility Auto",
+    "vendor_name": "FreshVendor",
+    "department": "Engineering",
+    "annual_cost_usd": 5000.0,
+    "user_count": 15,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_standard_review",
+    "required_approvals": [
+      "Department Head",
+      "Procurement"
+    ],
+    "approvals_must_not_include": [
+      "Finance",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [],
+    "risk_flags_must_not_contain": [
+      "vendor_review_expired",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required",
+      "existing_tool_overlap"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [],
+    "overlap_type": "none",
+    "notes": "Freshness test: review date 2025-09-30 is exactly 365 days old relative to 2026-09-30 in both registry and API. Approved procurement and legal. No category overlap. Assessment is VALID."
+  },
+  {
+    "case_id": "SYN-08",
+    "request_id": "REQ-SYN-08",
+    "product_name": "CleanFacility Pro",
+    "vendor_name": "StaleVendor",
+    "department": "Engineering",
+    "annual_cost_usd": 5000.0,
+    "user_count": 15,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Procurement",
+      "Security"
+    ],
+    "approvals_must_not_include": [
+      "Finance",
+      "CFO",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "vendor_review_expired",
+      "security_review_required"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "privacy_review_required",
+      "legal_review_required",
+      "existing_tool_overlap"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [],
+    "overlap_type": "none",
+    "notes": "Stale boundary test: review date 2025-09-29 is 366 days old relative to 2026-09-30 in both registry and API. Approved status and legal. No category overlap. Assessment is EXPIRED."
+  },
+  {
+    "case_id": "SYN-09",
+    "request_id": "REQ-SYN-09",
+    "product_name": "DocSpace GTM Campaign Studio",
+    "vendor_name": "DocSpace",
+    "department": "Go To Market",
+    "annual_cost_usd": 5000.0,
+    "user_count": 12,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "escalate_to_finance",
+    "required_approvals": [
+      "Department Head",
+      "Procurement",
+      "Finance"
+    ],
+    "approvals_must_not_include": [
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "existing_tool_overlap",
+      "missing_information"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [
+      "Department budget record missing"
+    ],
+    "human_review_required": true,
+    "judgment_approvals": [
+      "Finance"
+    ],
+    "judgment_risk_flags": [
+      "existing_tool_overlap"
+    ],
+    "overlap_type": "expansion",
+    "notes": "Requester is in 'Go To Market', which has no row in department_budgets.csv. Cost is $5,000, so Finance comes ONLY from the missing budget row, not from the financial threshold."
+  },
+  {
+    "case_id": "SYN-10",
+    "request_id": "REQ-SYN-10",
+    "product_name": "SecCheck Analytics",
+    "vendor_name": "InjectedVendor",
+    "department": "Engineering",
+    "annual_cost_usd": 5000.0,
+    "user_count": 15,
+    "data_access_level": "internal_documents",
+    "recommendation_category": "route_for_governance_review",
+    "required_approvals": [
+      "Department Head",
+      "Procurement",
+      "Security"
+    ],
+    "approvals_must_not_include": [
+      "Finance",
+      "CFO",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "security_review_required",
+      "prompt_injection_detected"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [],
+    "overlap_type": "none",
+    "notes": "Vendor has Approved legal and procurement status, but incomplete security review, plus an injection note in external vendor API record. Security review remains required."
+  },
+  {
+    "case_id": "SYN-11",
+    "request_id": "REQ-SYN-11",
+    "product_name": "Generic Cloud Suite",
+    "vendor_name": null,
+    "department": "Marketing",
+    "annual_cost_usd": null,
+    "user_count": null,
+    "data_access_level": null,
+    "recommendation_category": "needs_more_information",
+    "required_approvals": [],
+    "approvals_must_not_include": [
+      "Manager",
+      "Department Head",
+      "Finance",
+      "Procurement",
+      "CFO",
+      "Security",
+      "Privacy",
+      "Legal"
+    ],
+    "risk_flags": [
+      "missing_information"
+    ],
+    "risk_flags_must_not_contain": [
+      "budget_insufficient",
+      "security_review_required",
+      "privacy_review_required",
+      "legal_review_required"
+    ],
+    "missing_information": [
+      "Missing vendor name",
+      "Missing annual cost estimate",
+      "Missing user/seat license count",
+      "Missing intended data access level"
+    ],
+    "human_review_required": true,
+    "judgment_approvals": [],
+    "judgment_risk_flags": [],
+    "overlap_type": "none",
+    "notes": "Ambiguous request with vendor_name = null, cost null, seats null, data access null. Missing material fields pause review."
+  }
+]
