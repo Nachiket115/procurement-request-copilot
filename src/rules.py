@@ -40,6 +40,34 @@ PII_DATA_ACCESS_LEVELS = {
 }
 
 
+def clean_str(val: Any) -> str:
+    """Return empty string for None/NaN and a stripped lowercase string otherwise."""
+    if val is None or pd.isna(val):
+        return ""
+    return str(val).strip().lower()
+
+
+def clean_bool(val: Any) -> bool:
+    """Return True only for True or string 'true' (case-insensitive); NaN/None is False."""
+    if val is True:
+        return True
+    if val is False or val is None or pd.isna(val):
+        return False
+    if isinstance(val, str) and val.strip().lower() == "true":
+        return True
+    return False
+
+
+def is_sensitive_data_access(level: str | None) -> bool:
+    """Check whether data access level triggers Security review."""
+    if not level:
+        return False
+    clean = clean_str(level)
+    if clean in SENSITIVE_DATA_ACCESS_LEVELS:
+        return True
+    return any(keyword in clean for keyword in ("production", "cloud", "credential", "secret"))
+
+
 def approval_thresholds(cost: int | float | str | Decimal | None) -> list[str]:
     """Deterministic financial approval tiers per Policy Section 4.
 
@@ -130,17 +158,17 @@ def find_catalog_overlap(request: dict, catalog_df: pd.DataFrame | None = None) 
         catalog_df = load_software_catalog()
 
     matches: list[dict] = []
-    prod_req = (request.get("product_name") or "").strip().lower()
-    vendor_req = (request.get("vendor_name") or "").strip().lower()
-    cat_req = (request.get("category") or "").strip().lower()
+    prod_req = clean_str(request.get("product_name"))
+    vendor_req = clean_str(request.get("vendor_name"))
+    cat_req = clean_str(request.get("category"))
 
     if not prod_req and not vendor_req and not cat_req:
         return []
 
     for _, row in catalog_df.iterrows():
-        sw_name = str(row.get("product_name", "")).strip().lower()
-        sw_vendor = str(row.get("vendor_name", "")).strip().lower()
-        sw_cat = str(row.get("category", "")).strip().lower()
+        sw_name = clean_str(row.get("product_name"))
+        sw_vendor = clean_str(row.get("vendor_name"))
+        sw_cat = clean_str(row.get("category"))
 
         matched = False
         overlap_type = "competitor"
@@ -171,7 +199,7 @@ def reconcile_vendor(registry_row: dict | None, api_result: dict | None) -> dict
     flags: list[str] = []
     evidence: list[dict[str, Any]] = []
 
-    api_status = (api_result or {}).get("status", "ok") if api_result else "unavailable"
+    api_status = clean_str((api_result or {}).get("status", "ok")) if api_result else "unavailable"
 
     if api_result and api_status in ("unavailable", "not_found"):
         flags.append("vendor_risk_unavailable")
@@ -181,24 +209,29 @@ def reconcile_vendor(registry_row: dict | None, api_result: dict | None) -> dict
             "reference": "/vendor-risk",
         })
     elif api_result:
+        finding_parts = [
+            f"Vendor risk level: {api_result.get('risk_level', 'unknown')}",
+            f"security status: {api_result.get('security_review_status', 'unknown')}",
+        ]
+        api_notes = api_result.get("notes", "")
+        if api_notes:
+            is_inj, _ = detect_injection(api_notes)
+            if is_inj:
+                finding_parts.append("notes withheld: injection pattern detected")
         evidence.append({
             "source": "vendor_risk_api",
-            "finding": (
-                f"Vendor risk level: {api_result.get('risk_level', 'unknown')}, "
-                f"security status: {api_result.get('security_review_status', 'unknown')}, "
-                f"notes: {api_result.get('notes', '')}"
-            ),
+            "finding": ", ".join(finding_parts),
             "reference": "/vendor-risk",
         })
 
     if registry_row:
-        reg_sec = registry_row.get("security_status") or registry_row.get("security_review_status")
+        reg_sec = clean_str(registry_row.get("security_status")) or clean_str(registry_row.get("security_review_status"))
         evidence.append({
             "source": "vendor_registry",
             "finding": (
-                f"Internal registry status: security={reg_sec}, "
-                f"legal={registry_row.get('legal_terms_status')}, "
-                f"procurement={registry_row.get('procurement_status')}"
+                f"Internal registry status: security={reg_sec or 'unknown'}, "
+                f"legal={clean_str(registry_row.get('legal_terms_status')) or 'unknown'}, "
+                f"procurement={clean_str(registry_row.get('procurement_status')) or 'unknown'}"
             ),
             "reference": "vendors.csv",
         })
@@ -210,12 +243,16 @@ def reconcile_vendor(registry_row: dict | None, api_result: dict | None) -> dict
         })
 
     reg_date_str = registry_row.get("security_review_date") if registry_row else None
+    if pd.isna(reg_date_str):
+        reg_date_str = None
     api_date_str = api_result.get("last_review_date") if api_result else None
+    if pd.isna(api_date_str):
+        api_date_str = None
 
     reg_expired = False
     if reg_date_str:
         try:
-            reg_d = date.fromisoformat(str(reg_date_str))
+            reg_d = date.fromisoformat(str(reg_date_str).strip())
             if (REFERENCE_DATE - reg_d).days > 365:
                 reg_expired = True
         except ValueError:
@@ -224,13 +261,13 @@ def reconcile_vendor(registry_row: dict | None, api_result: dict | None) -> dict
     api_expired = False
     if api_date_str:
         try:
-            api_d = date.fromisoformat(str(api_date_str))
+            api_d = date.fromisoformat(str(api_date_str).strip())
             if (REFERENCE_DATE - api_d).days > 365:
                 api_expired = True
         except ValueError:
             pass
 
-    if api_result and api_result.get("security_review_status") == "expired":
+    if api_result and clean_str(api_result.get("security_review_status")) == "expired":
         api_expired = True
 
     if reg_expired or api_expired:
@@ -238,8 +275,8 @@ def reconcile_vendor(registry_row: dict | None, api_result: dict | None) -> dict
             flags.append("vendor_review_expired")
 
     # Conflicting vendor evidence: registry says "approved" AND API says expired/not_completed/pending/failed
-    reg_sec_str = ((registry_row.get("security_status") or registry_row.get("security_review_status") or "")).strip().lower() if registry_row else ""
-    api_sec_str = ((api_result.get("security_review_status") or "")).strip().lower() if api_result else ""
+    reg_sec_str = clean_str(registry_row.get("security_status") if registry_row else None) or clean_str(registry_row.get("security_review_status") if registry_row else None)
+    api_sec_str = clean_str(api_result.get("security_review_status") if api_result else None)
 
     if registry_row and reg_sec_str == "approved" and api_sec_str in ("expired", "not_completed", "pending", "failed"):
         if "conflicting_vendor_evidence" not in flags:
@@ -255,10 +292,10 @@ def reconcile_vendor(registry_row: dict | None, api_result: dict | None) -> dict
 
 def detect_injection(text: str | None) -> tuple[bool, str | None]:
     """Detect prompt injection heuristic patterns in untrusted input text per Policy Section 9."""
-    if not text:
+    if not text or pd.isna(text):
         return False, None
     for pattern in INJECTION_PATTERNS:
-        match = pattern.search(text)
+        match = pattern.search(str(text))
         if match:
             return True, match.group(0).lower()
     return False, None
@@ -309,7 +346,7 @@ def evaluate_request(
         if "missing_information" not in risk_flags:
             risk_flags.append("missing_information")
 
-    # 2. Prompt injection detection (check justification and external vendor notes)
+    # 2. Prompt injection detection (check justification, vendor API notes, registry notes, and catalog notes)
     justification = request.get("business_justification", "")
     is_inj_req, pat_req = detect_injection(justification)
     if is_inj_req:
@@ -343,6 +380,20 @@ def evaluate_request(
             "reference": "software_catalog.csv",
         })
 
+        # Scan matched catalog rows for prompt injection
+        for m in overlaps:
+            cat_notes = m.get("notes", "")
+            if cat_notes:
+                is_inj_cat, pat_cat = detect_injection(cat_notes)
+                if is_inj_cat:
+                    if "prompt_injection_detected" not in risk_flags:
+                        risk_flags.append("prompt_injection_detected")
+                    evidence.append({
+                        "source": "security_scanner",
+                        "finding": f"Prompt injection pattern detected in software catalog notes for '{m.get('product_name', '')}': '{pat_cat}'",
+                        "reference": "Policy Section 9",
+                    })
+
     # 4. Vendor lookup & reconciliation
     if vendors_df is None:
         vendors_df = load_vendors(fixtures_dir=fixtures_dir)
@@ -355,6 +406,19 @@ def evaluate_request(
         matches = vendors_df[vendors_df["vendor_name"].astype(str).str.strip().str.lower() == str(vendor_name).strip().lower()]
         if not matches.empty:
             registry_row = matches.iloc[0].to_dict()
+
+    if registry_row:
+        reg_notes = registry_row.get("notes", "")
+        if reg_notes:
+            is_inj_reg, pat_reg = detect_injection(reg_notes)
+            if is_inj_reg:
+                if "prompt_injection_detected" not in risk_flags:
+                    risk_flags.append("prompt_injection_detected")
+                evidence.append({
+                    "source": "security_scanner",
+                    "finding": f"Prompt injection pattern detected in vendor registry notes: '{pat_reg}'",
+                    "reference": "Policy Section 9",
+                })
 
     if has_vendor_name and vendor_api_result is None:
         if "vendor_risk_unavailable" not in risk_flags:
@@ -372,7 +436,7 @@ def evaluate_request(
     evidence.extend(reconcile_res["evidence"])
 
     # Personal data processing note in evidence (note only, no risk flag)
-    if vendor_api_result and vendor_api_result.get("processes_personal_data"):
+    if vendor_api_result and clean_bool(vendor_api_result.get("processes_personal_data")):
         evidence.append({
             "source": "vendor_risk_api",
             "finding": "Vendor processes personal data (surfaced as evidence note only; request data classification governs Privacy review)",
@@ -428,16 +492,16 @@ def evaluate_request(
         if missing_dept and "Finance" not in required_approvals:
             required_approvals.append("Finance")
 
-        data_access = (request.get("data_access_level") or "").strip().lower()
-        integrations = [str(i).lower() for i in (request.get("requested_integrations") or [])]
+        data_access = clean_str(request.get("data_access_level"))
+        integrations = [clean_str(i) for i in (request.get("requested_integrations") or [])]
         has_prod_cloud = any("production" in i or "cloud" in i for i in integrations)
 
-        reg_sec_status = ((registry_row.get("security_status") or registry_row.get("security_review_status") or "")).strip().lower() if registry_row else ""
-        api_sec_status = ((vendor_api_result.get("security_review_status") or "")).strip().lower() if vendor_api_result else ""
+        reg_sec_status = clean_str(registry_row.get("security_status") if registry_row else None) or clean_str(registry_row.get("security_review_status") if registry_row else None)
+        api_sec_status = clean_str(vendor_api_result.get("security_review_status") if vendor_api_result else None)
 
         # Security review triggers per Policy Section 5
         sec_review = False
-        if data_access in SENSITIVE_DATA_ACCESS_LEVELS:
+        if is_sensitive_data_access(data_access):
             sec_review = True
         elif has_prod_cloud:
             sec_review = True
@@ -460,14 +524,14 @@ def evaluate_request(
 
         # Privacy review triggers per Policy Section 6
         # Triggers for employee/customer PII, or sensitive data stored outside region
-        api_outside = bool((vendor_api_result or {}).get("stores_data_outside_region", False))
-        reg_outside = bool(registry_row.get("stores_data_outside_region", False)) if registry_row else False
+        api_outside = clean_bool((vendor_api_result or {}).get("stores_data_outside_region"))
+        reg_outside = clean_bool(registry_row.get("stores_data_outside_region") if registry_row else None)
         stores_outside = api_outside or reg_outside
 
         privacy_review = False
         if data_access in PII_DATA_ACCESS_LEVELS:
             privacy_review = True
-        elif stores_outside and data_access in SENSITIVE_DATA_ACCESS_LEVELS:
+        elif stores_outside and is_sensitive_data_access(data_access):
             privacy_review = True
 
         if privacy_review:
@@ -480,10 +544,11 @@ def evaluate_request(
         # Precedence:
         # (1) Non-approved / non-standard legal terms (Draft, Unknown, Pending) trigger Legal review regardless of spend.
         # (2) New vendor with annual spend >= $10,000.
-        # (3) Material cross-region transfer of sensitive/PII data on significant spend (>= $10,000) or new vendors.
+        # (3) Judgment call: new vendor with unavailable vendor risk API routes to Legal for contract diligence.
+        # (4) Material cross-region transfer of sensitive/PII data on significant spend (>= $10,000).
         cost_val = Decimal(str(cost)) if cost is not None else Decimal("0")
-        is_new_vendor = registry_row is None or (registry_row.get("procurement_status") or "").strip().lower() == "new"
-        legal_status = (registry_row.get("legal_terms_status") or "").strip().lower() if registry_row else ""
+        is_new_vendor = registry_row is None or clean_str(registry_row.get("procurement_status")) == "new"
+        legal_status = clean_str(registry_row.get("legal_terms_status") if registry_row else None)
 
         legal_review = False
         if registry_row is not None and legal_status not in ("approved", "standard"):
