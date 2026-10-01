@@ -1,7 +1,17 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import Literal
 from pydantic import BaseModel, Field
+
+
+class RecommendationCategory(str, Enum):
+    route_for_standard_review = "route_for_standard_review"
+    route_for_governance_review = "route_for_governance_review"
+    use_existing_tool = "use_existing_tool"
+    escalate_to_finance = "escalate_to_finance"
+    escalate_unavailable_evidence = "escalate_unavailable_evidence"
+    needs_more_information = "needs_more_information"
 
 
 class EvidenceItem(BaseModel):
@@ -14,11 +24,15 @@ class RunTelemetry(BaseModel):
     llm_calls: int | None = None
     tool_calls: int | None = None
     tool_names: list[str] = Field(default_factory=list)
+    latency_ms: float | None = None
+    guardrail_corrections: int = 0
+    model_name: str | None = None
 
 
 class ProcurementDecision(BaseModel):
     request_id: str
     recommendation: str = Field(description="Short recommendation label or sentence")
+    recommendation_category: RecommendationCategory | None = None
     evidence: list[EvidenceItem] = Field(default_factory=list)
     required_approvals: list[str] = Field(default_factory=list)
     missing_information: list[str] = Field(default_factory=list)
