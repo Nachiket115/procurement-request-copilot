@@ -161,9 +161,9 @@ def apply_guardrails(
     final_missing = list(floor_missing)
 
     # 4. Approvals: floor approvals UNION draft approvals restricted to canonical set, output in canonical order.
-    # If the floor has missing material fields, approvals = [] regardless of the draft.
+    # If the floor has missing material fields (needs_more_information), approvals = [] regardless of the draft.
     # Over-escalation is the safe failure for a compliance tool, so valid extra approvals from the LLM are kept.
-    if final_missing or floor_cat_str == RecommendationCategory.needs_more_information.value:
+    if floor_cat_str == RecommendationCategory.needs_more_information.value:
         final_approvals: list[str] = []
     else:
         draft_appr_raw = draft_dict.get("required_approvals", []) if isinstance(draft_dict.get("required_approvals"), list) else []
@@ -274,7 +274,7 @@ def apply_guardrails(
 
         removals = 0
         # Invalid approval names (or all approvals if missing fields cleared approvals)
-        if final_missing or floor_cat_str == RecommendationCategory.needs_more_information.value:
+        if floor_cat_str == RecommendationCategory.needs_more_information.value:
             removals += len(draft_appr)
         else:
             removals += len([a for a in draft_appr if a not in CANONICAL_APPROVALS])
@@ -295,7 +295,7 @@ def apply_guardrails(
 
         additions = 0
         # Floor approvals omitted by draft (only if floor actually has approvals)
-        if not final_missing and floor_cat_str != RecommendationCategory.needs_more_information.value:
+        if floor_cat_str != RecommendationCategory.needs_more_information.value:
             additions += len([a for a in floor_approvals if a not in draft_appr])
 
         # Floor flags omitted by draft (computed against original floor flags)

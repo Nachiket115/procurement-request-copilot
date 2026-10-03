@@ -53,6 +53,28 @@ class TestGuardrailsAndTools(unittest.TestCase):
         self.assertNotIn("Privacy", decision.required_approvals)
         self.assertEqual(decision.recommendation_category, RecommendationCategory.route_for_governance_review)
 
+    def test_syn_09_missing_department_escalates_to_finance(self):
+        req = get_request("REQ-SYN-09", fixtures_dir=FIXTURES_DIR)
+        vendor_data = json.loads((ROOT / "data" / "vendor_risk.json").read_text(encoding="utf-8"))
+        vendor_api_result = {"status": "ok", "vendor_name": "DocSpace", **vendor_data["DocSpace"]}
+
+        decision = apply_guardrails(
+            None,
+            req,
+            vendor_api_result=vendor_api_result,
+            fixtures_dir=FIXTURES_DIR,
+        )
+
+        self.assertEqual(
+            decision.required_approvals,
+            ["Department Head", "Procurement", "Finance"],
+        )
+        self.assertEqual(
+            decision.recommendation_category,
+            RecommendationCategory.escalate_to_finance,
+        )
+        self.assertIn("Department budget record missing", decision.missing_information)
+
     def test_draft_none_fallback_and_corrections_zero(self):
         # (b) draft None -> next_step contains llm_fallback_engaged, corrections 0
         req = {
