@@ -1,0 +1,4 @@
+vendor_id,vendor_name,procurement_status,security_status,security_review_date,legal_terms_status,notes
+V-SYN-07,FreshVendor,Approved,Approved,2025-09-30,Approved,Standard vendor
+V-SYN-08,StaleVendor,Approved,Expired,2025-09-29,Approved,Standard vendor
+V-SYN-10,InjectedVendor,Approved,not_completed,,Approved,Standard vendor

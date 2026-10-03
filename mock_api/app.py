@@ -1,13 +1,29 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from urllib.parse import unquote
 
 from fastapi import FastAPI, HTTPException
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = json.loads((ROOT / "data" / "vendor_risk.json").read_text(encoding="utf-8"))
+
+
+def _load_data() -> dict:
+    base = json.loads((ROOT / "data" / "vendor_risk.json").read_text(encoding="utf-8"))
+    fixtures_env = os.environ.get("VENDOR_RISK_FIXTURES_PATH")
+    if fixtures_env:
+        p = Path(fixtures_env)
+        if not p.is_absolute() and not p.exists():
+            p = ROOT / p
+        if p.exists() and p.is_file():
+            fixtures = json.loads(p.read_text(encoding="utf-8"))
+            base.update(fixtures)
+    return base
+
+
+DATA = _load_data()
 
 app = FastAPI(title="FDE Mock Vendor Risk API", version="1.0")
 
