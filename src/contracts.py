@@ -26,6 +26,8 @@ class RunTelemetry(BaseModel):
     tool_names: list[str] = Field(default_factory=list)
     latency_ms: float | None = None
     guardrail_corrections: int = 0
+    guardrail_additions: int = 0
+    guardrail_removals: int = 0
     model_name: str | None = None
 
 
