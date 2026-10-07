@@ -1,0 +1,4 @@
+timestamp,architecture,model_name,total_cases,strict_pass_rate,lenient_pass_rate,category_accuracy,approvals_exact_rate,mean_latency_ms,median_latency_ms,p95_latency_ms,total_llm_calls,total_tool_calls,llm_fallback_count,mean_llm_calls
+2026-10-07T07:03:08.612804+00:00,deterministic,deterministic,21,1.0,1.0,1.0,1.0,1.61,0.89,4.7,0,0,21,0.0
+2026-10-07T07:10:17.194076+00:00,single,gemini-3.1-flash-lite,21,0.9048,0.9048,1.0,0.9524,20374.77,20054.87,24731.86,63,104,0,3.0
+2026-10-07T07:20:47.125146+00:00,staged,gemini-3.1-flash-lite,21,0.9048,0.9048,1.0,0.9524,29987.57,26838.86,40915.46,84,102,0,4.0
