@@ -229,7 +229,7 @@ class TestLLM(unittest.TestCase):
         self.assertEqual(result.tool_calls, 2)
         self.assertEqual(result.tool_names, ["get_budget", "check_risk"])
         self.assertEqual(result.llm_calls, 2)
-        self.assertEqual(result.model_name, "gemini-2.5-flash-lite")
+        self.assertEqual(result.model_name, client.model_name)
 
     def test_run_tool_loop_max_iterations(self):
         """run_tool_loop terminates when max_iterations is reached."""
@@ -349,7 +349,8 @@ class TestLLM(unittest.TestCase):
             target_logger.removeHandler(handler)
 
     def test_run_tool_loop_cache_hit(self):
-        """With use_cache=True, run a tool loop whose first turn is a function call and second is text twice; second run makes 0 SDK calls and returns identical results."""
+        """With use_cache=True, the first turn (user prompt) is cached. Function-call turns
+        are NOT cached to preserve thought_signatures. The final text-only turn is cached."""
         mock_sdk = MagicMock()
         turn1_resp = types.GenerateContentResponse(
             candidates=[
@@ -371,6 +372,7 @@ class TestLLM(unittest.TestCase):
                 )
             ]
         )
+        # First run: turn 1 (user prompt, cacheable) + turn 2 (after tool, not cached) = 2 SDK calls
         mock_sdk.models.generate_content.side_effect = [turn1_resp, turn2_resp]
 
         tool_impls = {"get_data": lambda k: {"result": "ok"}}
@@ -384,9 +386,11 @@ class TestLLM(unittest.TestCase):
         self.assertEqual(res1.tool_names, ["get_data"])
         self.assertEqual(res1.llm_calls, 2)
 
-        # Second run: should hit cache on both turns -> 0 additional SDK calls
+        # Second run: turn 1 hits cache (0 SDK calls), but turn 2 (after tool
+        # execution with new contents) needs a fresh SDK call = 1 more SDK call
+        mock_sdk.models.generate_content.side_effect = [turn2_resp]
         res2 = client.run_tool_loop("sys", "user query", tool_decls, tool_impls)
-        self.assertEqual(mock_sdk.models.generate_content.call_count, 2)
+        self.assertEqual(mock_sdk.models.generate_content.call_count, 3)  # 2 + 1
         self.assertEqual(res2.text, res1.text)
         self.assertEqual(res2.tool_calls, res1.tool_calls)
         self.assertEqual(res2.tool_names, res1.tool_names)
@@ -433,7 +437,95 @@ class TestLLM(unittest.TestCase):
         self.assertIsNotNone(last_content.parts[0].function_response)
         self.assertEqual(last_content.parts[0].function_response.name, "check_status")
 
+    def test_thought_signature_preserved_in_turn2(self):
+        """When the SDK response Part carries thought_signature bytes, the Content
+        passed to generate_content on turn 2 must contain that same Part with the
+        signature intact (not a rebuilt FunctionCall part)."""
+        mock_sdk = MagicMock()
+
+        # Build a Part with a FunctionCall that carries a thought_signature
+        sig_bytes = b"\x01\x02\x03\x04secret-signature-bytes"
+        fc_part = types.Part(
+            function_call=types.FunctionCall(
+                name="lookup_vendor",
+                args={"name": "Acme"},
+            ),
+            thought_signature=sig_bytes,
+        )
+        turn1_content = types.Content(role="model", parts=[fc_part])
+        turn1_response = types.GenerateContentResponse(
+            candidates=[types.Candidate(content=turn1_content)]
+        )
+
+        turn2_response = types.GenerateContentResponse(
+            candidates=[
+                types.Candidate(
+                    content=types.Content(
+                        role="model",
+                        parts=[types.Part(text="Vendor Acme found.")],
+                    )
+                )
+            ]
+        )
+
+        mock_sdk.models.generate_content.side_effect = [turn1_response, turn2_response]
+
+        tool_impls = {"lookup_vendor": lambda name: {"status": "ok", "risk": "low"}}
+        tool_decls = [{"name": "lookup_vendor", "description": "Look up vendor"}]
+
+        client = LLMClient(api_key="fake-key", client=mock_sdk, cache_dir=self.test_dir, use_cache=False)
+        result = client.run_tool_loop("sys", "Find vendor Acme", tool_decls, tool_impls)
+
+        self.assertEqual(result.text, "Vendor Acme found.")
+        self.assertEqual(mock_sdk.models.generate_content.call_count, 2)
+
+        # Inspect the contents passed to turn 2
+        turn2_call_args = mock_sdk.models.generate_content.call_args_list[1]
+        contents_turn2 = turn2_call_args.kwargs["contents"]
+
+        # contents_turn2 should be: [user, model (with sig), user (tool response)]
+        self.assertEqual(len(contents_turn2), 3)
+
+        model_content = contents_turn2[1]
+        self.assertEqual(model_content.role, "model")
+        self.assertEqual(len(model_content.parts), 1)
+
+        # The model part should be the ORIGINAL Part object, not a rebuilt one
+        preserved_part = model_content.parts[0]
+        self.assertIsNotNone(preserved_part.function_call)
+        self.assertEqual(preserved_part.function_call.name, "lookup_vendor")
+        # The thought_signature must be preserved
+        self.assertEqual(preserved_part.thought_signature, sig_bytes)
+        # It should be the exact same Part object
+        self.assertIs(preserved_part, fc_part)
+
+    def test_tool_loop_error_logged_without_api_key(self):
+        """When a tool-loop LLM call raises, a warning is logged with error text
+        but the API key is never included."""
+        secret_key = "AIzaSyNeverLogThis99999"
+        mock_sdk = MagicMock()
+        mock_sdk.models.generate_content.side_effect = RuntimeError(
+            f"Bad request with key {secret_key}"
+        )
+
+        log_stream = io.StringIO()
+        handler = logging.StreamHandler(log_stream)
+        target_logger = logging.getLogger("src.llm")
+        target_logger.addHandler(handler)
+        target_logger.setLevel(logging.DEBUG)
+
+        try:
+            client = LLMClient(api_key=secret_key, client=mock_sdk, cache_dir=self.test_dir, use_cache=False)
+            with self.assertRaises(LLMUnavailableError):
+                client.run_tool_loop("sys", "user", tool_declarations=[{"name": "t"}])
+
+            logs_text = log_stream.getvalue()
+            self.assertIn("Tool-loop LLM call failed", logs_text)
+            self.assertNotIn(secret_key, logs_text)
+            self.assertIn("[REDACTED]", logs_text)
+        finally:
+            target_logger.removeHandler(handler)
+
 
 if __name__ == "__main__":
     unittest.main()
-

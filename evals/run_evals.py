@@ -70,6 +70,7 @@ def score_case(
     case: dict[str, Any],
     decision: ProcurementDecision,
     floor_eval: dict[str, Any] | None = None,
+    architecture: str | None = None,
 ) -> dict[str, Any]:
     """Score a decision against ground truth case definition."""
     cat_val = decision.recommendation_category.value if hasattr(decision.recommendation_category, "value") else str(decision.recommendation_category or "")
@@ -106,6 +107,9 @@ def score_case(
         flags_grounded = True
     grounded = has_evidence and flags_grounded
 
+    # Detect LLM fallback from next_step
+    llm_fallback = "[llm_fallback_engaged]" in (decision.next_step or "")
+
     strict_pass = bool(
         category_correct
         and approvals_exact
@@ -135,6 +139,11 @@ def score_case(
         and grounded
     )
 
+    # For single/staged architectures, a case with llm_fallback must NOT pass
+    if llm_fallback and architecture in ("single", "staged"):
+        strict_pass = False
+        lenient_pass = False
+
     llm_target_hit: bool | None = None
     if "llm_target_recommendation_category" in case:
         llm_target_hit = (cat_val == case["llm_target_recommendation_category"])
@@ -154,6 +163,7 @@ def score_case(
         "grounded": grounded,
         "strict_pass": strict_pass,
         "lenient_pass": lenient_pass,
+        "llm_fallback": llm_fallback,
         "llm_target_hit": llm_target_hit,
     }
 
@@ -260,7 +270,7 @@ def run_evaluation_suite(
                 floor_eval = evaluate_request(req, vendor_api_result=vendor_api_res, fixtures_dir=fix_dir)
 
                 # Score case
-                scores = score_case(case, decision, floor_eval=floor_eval)
+                scores = score_case(case, decision, floor_eval=floor_eval, architecture=arch)
 
                 telemetry = decision.telemetry
                 lat_ms = telemetry.latency_ms if (telemetry and telemetry.latency_ms is not None) else (time.time() - start_time) * 1000.0
@@ -278,6 +288,8 @@ def run_evaluation_suite(
 
                 ts = datetime.now(timezone.utc).isoformat()
 
+                llm_fallback = scores["llm_fallback"]
+
                 row = {
                     "timestamp": ts,
                     "architecture": arch,
@@ -286,6 +298,7 @@ def run_evaluation_suite(
                     "request_id": req_id,
                     "strict_pass": scores["strict_pass"],
                     "lenient_pass": scores["lenient_pass"],
+                    "llm_fallback": llm_fallback,
                     "category_correct": scores["category_correct"],
                     "approvals_exact": scores["approvals_exact"],
                     "flags_exact": scores["flags_exact"],
@@ -308,7 +321,8 @@ def run_evaluation_suite(
                 case_results.append(row)
 
                 status_str = "PASS" if scores["strict_pass"] else ("LENIENT" if scores["lenient_pass"] else "FAIL")
-                print(f"[{case_id:<7}] {status_str:<7} | Category: {scores['category_correct']!s:<5} | Approvals: {scores['approvals_exact']!s:<5} | Flags: {scores['flags_exact']!s:<5} | Latency: {lat_ms:6.1f}ms")
+                fallback_str = " LLM_FALLBACK" if llm_fallback else ""
+                print(f"[{case_id:<7}] {status_str:<7} | Category: {scores['category_correct']!s:<5} | Approvals: {scores['approvals_exact']!s:<5} | Flags: {scores['flags_exact']!s:<5} | Latency: {lat_ms:6.1f}ms{fallback_str}")
 
             if not case_results:
                 continue
@@ -326,6 +340,8 @@ def run_evaluation_suite(
             lenient_count = sum(1 for r in case_results if r["lenient_pass"])
             cat_count = sum(1 for r in case_results if r["category_correct"])
             appr_count = sum(1 for r in case_results if r["approvals_exact"])
+            fallback_count = sum(1 for r in case_results if r["llm_fallback"])
+            mean_llm_calls = round(total_llm_calls / n_cases, 2) if n_cases else 0.0
 
             sorted_lat = sorted(latencies)
             mean_lat = sum(sorted_lat) / n_cases if n_cases else 0.0
@@ -346,6 +362,8 @@ def run_evaluation_suite(
                 "p95_latency_ms": round(p95_lat, 2),
                 "total_llm_calls": total_llm_calls,
                 "total_tool_calls": total_tool_calls,
+                "llm_fallback_count": fallback_count,
+                "mean_llm_calls": mean_llm_calls,
             }
             summary_rows.append(sum_row)
 
@@ -354,6 +372,8 @@ def run_evaluation_suite(
             print(f"Lenient Pass Rate:   {lenient_count}/{n_cases} ({sum_row['lenient_pass_rate']*100:.1f}%)")
             print(f"Category Accuracy:   {cat_count}/{n_cases} ({sum_row['category_accuracy']*100:.1f}%)")
             print(f"Approvals Exact:     {appr_count}/{n_cases} ({sum_row['approvals_exact_rate']*100:.1f}%)")
+            print(f"LLM Fallback Count:  {fallback_count}/{n_cases}")
+            print(f"Mean LLM Calls:      {mean_llm_calls}")
             print(f"Mean Latency:        {mean_lat:.2f} ms")
             print(f"Median Latency:      {med_lat:.2f} ms")
             print(f"P95 Latency:         {p95_lat:.2f} ms")

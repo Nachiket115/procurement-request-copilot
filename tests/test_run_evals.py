@@ -166,5 +166,44 @@ class TestRunEvals(unittest.TestCase):
             )
 
 
+    def test_score_case_llm_fallback_affects_single_not_deterministic(self):
+        case = {
+            "case_id": "TEST-FB",
+            "recommendation_category": "route_for_standard_review",
+            "required_approvals": ["Manager"],
+            "risk_flags": ["existing_tool_overlap"],
+            "missing_information": [],
+        }
+        decision_fallback = ProcurementDecision(
+            request_id="REQ-TEST-FB",
+            recommendation="Standard review",
+            recommendation_category=RecommendationCategory.route_for_standard_review,
+            evidence=[EvidenceItem(source="rules_engine", finding="Valid overlap")],
+            required_approvals=["Manager"],
+            risk_flags=["existing_tool_overlap"],
+            missing_information=[],
+            next_step="Submit request [llm_fallback_engaged]",
+            human_review_required=True,
+        )
+
+        # For single architecture: fallback engaged causes failure
+        scores_single = score_case(case, decision_fallback, architecture="single")
+        self.assertTrue(scores_single["llm_fallback"])
+        self.assertFalse(scores_single["strict_pass"])
+        self.assertFalse(scores_single["lenient_pass"])
+
+        # For staged architecture: fallback engaged causes failure
+        scores_staged = score_case(case, decision_fallback, architecture="staged")
+        self.assertTrue(scores_staged["llm_fallback"])
+        self.assertFalse(scores_staged["strict_pass"])
+        self.assertFalse(scores_staged["lenient_pass"])
+
+        # For deterministic architecture: unaffected by fallback string
+        scores_det = score_case(case, decision_fallback, architecture="deterministic")
+        self.assertTrue(scores_det["llm_fallback"])
+        self.assertTrue(scores_det["strict_pass"])
+        self.assertTrue(scores_det["lenient_pass"])
+
+
 if __name__ == "__main__":
     unittest.main()

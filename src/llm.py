@@ -284,16 +284,23 @@ class LLMClient:
 
             except Exception as e:
                 last_exception = e
+                # Redact API key from error messages before logging
+                safe_msg = str(e)
+                if self._api_key and self._api_key in safe_msg:
+                    safe_msg = safe_msg.replace(self._api_key, "[REDACTED]")
                 if attempt < len(backoffs) and _is_transient_error(e):
                     wait_sec = backoffs[attempt]
-                    logger.warning("Transient LLM error on attempt %d: %s. Retrying in %ss...", attempt + 1, e, wait_sec)
+                    logger.warning("Transient LLM error on attempt %d: %s. Retrying in %ss...", attempt + 1, safe_msg, wait_sec)
                     if wait_sec > 0:
                         time.sleep(wait_sec)
                     continue
-                logger.error("LLM call failed on attempt %d: %s", attempt + 1, e)
-                raise LLMUnavailableError(f"LLM call failed: {e}") from e
+                logger.error("LLM call failed on attempt %d: %s", attempt + 1, safe_msg)
+                raise LLMUnavailableError(f"LLM call failed: {safe_msg}") from e
 
-        raise LLMUnavailableError(f"LLM call failed after retries: {last_exception}") from last_exception
+        safe_last = str(last_exception)
+        if self._api_key and self._api_key in safe_last:
+            safe_last = safe_last.replace(self._api_key, "[REDACTED]")
+        raise LLMUnavailableError(f"LLM call failed after retries: {safe_last}") from last_exception
 
     def generate_structured(
         self,
@@ -419,14 +426,26 @@ class LLMClient:
         last_text = ""
 
         for _ in range(max_iterations):
-            response = self._call_generate_content_with_retry(
-                contents=contents,
-                config=config,
-                cache_system=system,
-                cache_tools=tool_declarations,
-                cache_schema=None,
-                use_cache=use_cache,
-            )
+            # Never cache function-call turns (cached JSON loses thought_signatures).
+            # Only the first turn (user prompt) and final text-only response are cacheable.
+            is_first_turn = (len(contents) == 1)
+            turn_cache = use_cache if is_first_turn else False
+            try:
+                response = self._call_generate_content_with_retry(
+                    contents=contents,
+                    config=config,
+                    cache_system=system,
+                    cache_tools=tool_declarations,
+                    cache_schema=None,
+                    use_cache=turn_cache,
+                )
+            except Exception as e:
+                # Log warning without exposing the API key
+                error_msg = str(e)
+                if self._api_key and self._api_key in error_msg:
+                    error_msg = error_msg.replace(self._api_key, "[REDACTED]")
+                logger.warning("Tool-loop LLM call failed: %s", error_msg)
+                raise
             llm_calls += 1
 
             if response.text:
@@ -442,11 +461,25 @@ class LLMClient:
                     model_name=self.model_name,
                 )
 
-            # Function calls requested by the model
-            model_parts: list[types.Part] = []
-            for fc in fcs:
-                model_parts.append(types.Part(function_call=types.FunctionCall(name=fc.name, args=fc.args or {})))
-            contents.append(types.Content(role="model", parts=model_parts))
+            # Append the model's Content object preserving original parts
+            # (including thought_signature bytes on FunctionCall parts).
+            # Only rebuild from fc.name/fc.args for cached or mock responses
+            # that have no candidates content.
+            sdk_content = None
+            if hasattr(response, 'candidates') and response.candidates:
+                try:
+                    sdk_content = response.candidates[0].content
+                except (IndexError, AttributeError):
+                    sdk_content = None
+
+            if sdk_content is not None:
+                contents.append(sdk_content)
+            else:
+                # Cached / mock response – rebuild parts from fc data
+                model_parts: list[types.Part] = []
+                for fc in fcs:
+                    model_parts.append(types.Part(function_call=types.FunctionCall(name=fc.name, args=fc.args or {})))
+                contents.append(types.Content(role="model", parts=model_parts))
 
             # Execute function calls
             tool_response_parts: list[types.Part] = []
