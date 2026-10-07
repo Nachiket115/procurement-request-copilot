@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+import os
 import signal
 import subprocess
 import sys
@@ -13,8 +12,8 @@ ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env", override=False)
 
 
-def start(cmd: list[str]) -> subprocess.Popen:
-    return subprocess.Popen(cmd, cwd=ROOT)
+def start(cmd: list[str], env: dict[str, str] | None = None) -> subprocess.Popen:
+    return subprocess.Popen(cmd, cwd=ROOT, env=env)
 
 
 def wait_for_api(url: str, proc: subprocess.Popen, timeout_seconds: float = 10.0) -> None:
@@ -46,6 +45,8 @@ def main() -> None:
     procs: list[subprocess.Popen] = []
     try:
         print("Starting vendor-risk API on http://127.0.0.1:8001 ...")
+        api_env = dict(os.environ)
+        api_env["VENDOR_RISK_FIXTURES_PATH"] = str(ROOT / "evals" / "fixtures" / "vendors.json")
         api_proc = start(
             [
                 sys.executable,
@@ -56,7 +57,8 @@ def main() -> None:
                 "127.0.0.1",
                 "--port",
                 "8001",
-            ]
+            ],
+            env=api_env,
         )
         procs.append(api_proc)
         wait_for_api("http://127.0.0.1:8001/health", api_proc)
@@ -68,7 +70,7 @@ def main() -> None:
             print("Streamlit is not installed. Run: pip install -r requirements.txt")
             print("The mock API is still running. Press Ctrl+C to stop.")
         else:
-            print("Starting starter UI on http://127.0.0.1:8501 ...")
+            print("Starting Procurement Copilot UI on http://127.0.0.1:8501 ...")
             procs.append(
                 start(
                     [
