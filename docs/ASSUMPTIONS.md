@@ -28,7 +28,7 @@ This document outlines the operational and policy assumptions underpinning the d
 
 ### 3.2 Privacy Review
 - Triggered when request data access involves personal data (`employee_pii` or `customer_pii`), or sensitive data transferred to a vendor with `stores_data_outside_region: True`.
-- **Vendor-Level Personal Data:** Vendor `processes_personal_data: True` is captured as an evidence note only; it does not trigger a Privacy review unless the specific request's data class involves PII or out-of-region sensitive data.
+- **Vendor-Level Personal Data:** Vendor `processes_personal_data: True` is captured as an evidence note only; it does not trigger a Privacy review unless the specific request's data class involves PII or out-of-region sensitive data. For example, REQ-1002 (BrandBoard Enterprise) accesses `internal_marketing` data and deliberately does **not** trigger a Privacy review, even though the vendor risk API notes that the vendor processes personal data.
 
 ### 3.3 Legal Review Precedence
 Legal review routing follows strict precedence:

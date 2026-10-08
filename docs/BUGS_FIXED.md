@@ -36,6 +36,21 @@
 
 ---
 
+### 1.3 `src/guardrails.py`: Approvals Cleared on Missing Department
+- **File:** `src/guardrails.py`
+- **Root Cause:** When a department was missing from `department_budgets.csv`, the guardrail's missing-department escalation path inadvertently cleared previously computed financial approvals, dropping required approvers from the final decision.
+- **Fix:** Ensured that missing-department escalations (adding `Finance` to `required_approvals`) are unioned with the existing approval set rather than replacing it, preserving all previously determined financial and governance approvals.
+
+---
+
+### 1.4 `src/llm.py`: Gemini 3 `thought_signature` Error on Multi-Turn Function Calling
+- **File:** `src/llm.py`
+- **Root Cause:** Gemini 3 models return `thought_signature` fields in response parts during multi-turn function calling. When these parts were fed back into subsequent turns without the `thought_signature`, the API returned a `400 Bad Request` error. This defect was silently hidden during initial development because the post-LLM guardrail automatically fell back to the deterministic decision on any LLM failure, so every evaluation case still showed PASS.
+- **Fix:** Ensured that `thought_signature` fields from Gemini response parts are preserved and included in subsequent multi-turn conversation history.
+- **Impact on Evaluation:** This discovery led to adding the `llm_fallback` column to the evaluation CSVs and implementing strict scoring where a fallback never counts as a pass for single-agent or staged architectures.
+
+---
+
 ## 2. Input Hardening (Not Starter Defects)
 
 The following defensive hardening measures were introduced to ensure resilience across synthetic and edge-case evaluations:
