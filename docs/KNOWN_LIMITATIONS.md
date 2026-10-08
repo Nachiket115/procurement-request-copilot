@@ -38,3 +38,8 @@ This document identifies known technical boundaries, heuristic trade-offs, and o
 
 ## 6. Evaluation Scope
 - **Single Model Benchmark:** The evaluation benchmark covers 21 synthetic cases on a single model (`gemini-3.1-flash-lite`). Results may not generalize across different model families, versions, or temperature settings.
+
+---
+
+## 7. No Variance Estimate
+- **Single Run per Case (n=1):** Each LLM evaluation result comes from a single run per case with no variance estimate. The 19/21 vs 19/21 tie between architectures should be read as "no measurable difference in this sample" rather than proof of equivalence.

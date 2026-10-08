@@ -1,6 +1,5 @@
 # Architecture Decision Memo
 
-**Maximum length: 500 words**
 
 ## Decision
 
@@ -36,6 +35,7 @@ Before enterprise production deployment, we must validate:
 2. **Catalog Telemetry:** Tool overlap detection lacks live SaaS seat utilization data to determine if existing licenses can be reclaimed.
 3. **Adversarial Hardening:** Regex injection detection must be augmented with semantic classifiers.
 4. **Rate Limits & Mock Dependencies:** Production requires production API quotas and resilient integration with live vendor risk platforms.
+5. **No Variance Estimate:** Each result is a single run per case (n=1); the 19/21 tie should be read as "no measurable difference" rather than proof of equivalence.
 
 ## Why this is the right MVP
 

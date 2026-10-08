@@ -16,7 +16,8 @@ git clone https://github.com/Nachiket115/procurement-request-copilot.git
 cd procurement-request-copilot
 
 python3.12 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate        # macOS / Linux
+# .venv\Scripts\activate         # Windows
 pip install -r requirements.txt
 ```
 
@@ -345,3 +346,4 @@ See [Architecture Decision Memo](templates/architecture_decision.md) for the com
 5. **Tool-Loop Caching:** The first turn of a tool loop could technically be cached without thought signatures if caching were enabled for tool loops, but it is intentionally left off to avoid stale state.
 6. **Mock External API:** The mock vendor-risk service has case-sensitive endpoints and operates in-process.
 7. **Evaluation Scope:** Benchmark covers 21 synthetic cases on a single model (`gemini-3.1-flash-lite`).
+8. **No Variance Estimate:** Each LLM evaluation result is from a single run per case (n=1) with no variance estimate; the 19/21 vs 19/21 tie between architectures should be read as "no measurable difference in this sample" rather than proof of equivalence.
