@@ -2,10 +2,9 @@
 __pycache__/
 *.pyc
 .env
-.DS_Store
-.pytest_cache/
-evals/results_*.csv
 .cache/
 .vscode/
 .agents/
 .claude/
+.DS_Store
+.pytest_cache/
