@@ -199,7 +199,7 @@ with col3:
     if current_decision is None:
         st.info("Click **Run copilot** in the sidebar to produce a recommendation.")
     else:
-        if is_fallback(current_decision):
+        if is_fallback(current_decision) and cached_architecture != "deterministic":
             st.warning("⚠️ LLM unavailable: deterministic fallback shown")
 
         st.info("🛡️ **Advisory only: a human must decide**")
