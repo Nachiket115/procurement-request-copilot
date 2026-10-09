@@ -33,8 +33,8 @@ This document outlines the operational and policy assumptions underpinning the d
 ### 3.3 Legal Review Precedence
 Legal review routing follows strict precedence:
 1. **Non-Standard Terms:** Legal terms not marked `Approved` or `Standard` (e.g., `Draft`, `Unknown`, `Pending`, `NaN`) trigger Legal review regardless of annual spend.
-2. **New Vendor Spend Threshold:** Any new vendor with annual spend $\ge \$10,000$ requires Legal review.
-3. **Cross-Region PII Transfer:** Significant spend ($\ge \$10,000$) involving cross-region PII data transfers requires Legal review.
+2. **New Vendor Spend Threshold:** Any new vendor with annual spend ≥ $10,000 requires Legal review.
+3. **Cross-Region PII Transfer:** Significant spend (≥ $10,000) involving cross-region PII data transfers requires Legal review.
 4. **Judgment Call (New Vendor with Unavailable Risk API):** A new vendor whose risk/assessment API is unreachable (`vendor_risk_unavailable`) is routed to Legal for contract terms verification.
 
 ---

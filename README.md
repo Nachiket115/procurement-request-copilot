@@ -212,10 +212,10 @@ flowchart TD
 
 | Annual Spend (USD) | Required Approvals |
 |---|---|
-| $\le \$1,000$ | **Manager** |
-| $\$1,000.01 - \$10,000$ | **Department Head**, **Procurement** |
-| $\$10,000.01 - \$25,000$ | **Department Head**, **Finance**, **Procurement** |
-| $> \$25,000$ | **Department Head**, **Finance**, **CFO**, **Procurement** |
+| ≤ $1,000 | Manager |
+| $1,000.01 – $10,000 | Department Head, Procurement |
+| $10,000.01 – $25,000 | Department Head, Finance, Procurement |
+| > $25,000 | Department Head, Finance, CFO, Procurement |
 
 ### Taxonomies & Schema
 
@@ -232,7 +232,7 @@ flowchart TD
 
 1. **Deterministic Floor Union:** The guardrail computes a deterministic policy floor from request data and tool outputs. The model's draft approvals and flags are *unioned* with this floor—an LLM cannot drop a required approver or bypass a compliance check.
 2. **Canonical Role Enforcement:** Invented roles (e.g., "Infosec", "Compliance Committee") are stripped.
-3. **Claimed Approval Sanitization:** If the LLM generates approval language claiming pre-authorization (e.g., "Already CFO-approved"), the draft is rejected and reset to the deterministic floor.
+3. **Claimed Approval Sanitization:** If the LLM generates language claiming pre-authorization (e.g., "Already CFO-approved"), the draft's recommendation and next-step text are replaced with defaults (flagged with `[draft_claimed_approval]`), while approvals and flags still follow the deterministic floor union rule.
 4. **Advisory Invariant:** `human_review_required` is unconditionally forced to `True`.
 5. **Fallback Markers:** If an LLM call fails or times out, the engine executes a deterministic fallback, tagging `next_step` with `[llm_fallback_engaged]`.
 
@@ -298,7 +298,7 @@ The operational and policy assumptions underpinning the copilot include the foll
 - **Dataset:** 21 benchmark cases (10 starter cases + 11 synthetic edge cases).
 - **Model:** `gemini-3.1-flash-lite` (selected for reliable 15 RPM / 500 RPD quotas on free-tier; `gemini-2.5-flash-lite` was restricted to 20 requests/day).
 - **Public Evaluation Honesty:** The deterministic score of 21/21 reflects policy rules that were validated and refined against my hand-computed ground truth (`evals/ground_truth.json`). Therefore, this 100% score represents a rigorous verification of **rule-and-ground-truth consistency**, rather than independent proof of general AI generalization.
-- **Scoring:** Strict evaluation requires exact category match, exact approval set, exact risk flag set, all required evidence fields, and zero LLM fallbacks.
+- **Scoring:** Strict evaluation requires exact category match, exact approval set, exact risk flag set, at least one evidence item, grounded risk flags, and zero LLM fallbacks.
 
 ### Benchmark Results Table (Source: `evals/results/summary.csv`)
 
@@ -308,7 +308,7 @@ The operational and policy assumptions underpinning the copilot include the foll
 | **Architecture A (Single Agent)** | 21 | **90.5%** (19/21) | **100.0%** (21/21) | **95.2%** (20/21) | 0 | 3.0 | 20.4 s | 20.1 s | 24.7 s | 104 |
 | **Architecture B (Staged / 2-Agent)** | 21 | **90.5%** (19/21) | **100.0%** (21/21) | **95.2%** (20/21) | 0 | 4.0 | 30.0 s | 26.8 s | 40.9 s | 102 |
 
-*\*Note: In deterministic runs, `llm_fallback_count` in raw CSV is 21 due to `apply_guardrails(draft=None, ...)` tagging the string, but `evals/run_evals.py` explicitly exempts deterministic mode from strict fallback penalization because no LLM was requested.*
+Note: In deterministic runs, `llm_fallback_count` in raw CSV is 21 due to `apply_guardrails(draft=None, ...)` tagging the string, but `evals/run_evals.py` explicitly exempts deterministic mode from strict fallback penalization because no LLM was requested.
 
 ### Failure Analysis
 
